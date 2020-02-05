@@ -1,0 +1,13 @@
+version: "3.5"
+
+services:
+  dataminer_nginx:
+    networks:
+      dataminer_configurator:
+        aliases:
+          - dataminer
+
+networks:
+  dataminer_configurator:
+    driver: bridge
+    name: dataminer_configurator

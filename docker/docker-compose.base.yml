@@ -1,0 +1,118 @@
+version: "3.5"
+
+services:
+  dataminer_nginx:
+    build:
+      context: docker/nginx
+      args:
+        USER: ${UNIVERSE_USER}
+        ENVIRONMENT: ${UNIVERSE_ENVIRONMENT}
+        DEBUG: ${UNIVERSE_DEBUG:-true}
+        CERTIFICATE_TLD: ${UNIVERSE_CERTIFICATE_TLD}
+        NGINX_WORKER_PROCESSES: ${UNIVERSE_NGINX_WORKER_PROCESSES:-auto}
+        NGINX_ERROR_LOG: ${UNIVERSE_NGINX_ERROR_LOG:-/dev/stdout info}
+        NGINX_EVENTS_WORKER_CONNECTIONS: ${UNIVERSE_NGINX_EVENTS_WORKER_CONNECTIONS:-512}
+        NGINX_HTTP_SERVER_NAME: dataminer ${UNIVERSE_NGINX_HTTP_SERVER_NAME}
+        NGINX_HTTP_LOG_FORMAT: ${UNIVERSE_NGINX_HTTP_LOG_FORMAT:-main '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" "$http_x_forwarded_for"'}
+        NGINX_HTTP_SENDFILE: ${UNIVERSE_NGINX_HTTP_SENDFILE:-on}
+        NGINX_HTTP_TCP_NOPUSH: ${UNIVERSE_NGINX_HTTP_TCP_NOPUSH:-on}
+        NGINX_HTTP_FASTCGI_BUFFERING: ${UNIVERSE_NGINX_HTTP_FASTCGI_BUFFERING:-off}
+        NGINX_HTTP_SERVER_TOKENS: ${UNIVERSE_NGINX_HTTP_SERVER_TOKENS:-on}
+        NGINX_HTTP_KEEPALIVE_TIMEOUT: ${UNIVERSE_NGINX_HTTP_KEEPALIVE_TIMEOUT:-65}
+        NGINX_HTTP_ACCESS_LOG: ${UNIVERSE_NGINX_HTTP_ACCESS_LOG:-/dev/stdout}
+    image: dataminer_nginx:latest
+    container_name: dataminer_nginx
+    hostname: dataminer_nginx
+    networks:
+      - default
+    ports:
+      - ${UNIVERSE_INTERFACE_NGINX}:443
+    volumes:
+      - socket_php-fpm:/var/run/php-fpm/:rw
+      - webroot:/var/www/html/:ro
+  dataminer_php-fpm:
+    build:
+      context: docker/php-fpm
+      args:
+        USER: ${UNIVERSE_USER}
+        ENVIRONMENT: ${UNIVERSE_ENVIRONMENT}
+        DEBUG: ${UNIVERSE_DEBUG:-true}
+        PHP_MEMORY_LIMIT: ${UNIVERSE_PHP_MEMORY_LIMIT:-128M}
+        PHPFPM_ERROR_LOG: ${UNIVERSE_PHPFPM_ERROR_LOG:-/proc/self/fd/2}
+        PHPFPM_SYSLOG_FACILITY: ${UNIVERSE_PHPFPM_SYSLOG_FACILITY:-daemon}
+        PHPFPM_SYSLOG_IDENT: ${UNIVERSE_PHPFPM_SYSLOG_IDENT:-php-fpm}
+        PHPFPM_LOG_LEVEL: ${UNIVERSE_PHPFPM_LOG_LEVEL:-notice}
+        PHPFPM_LOG_LIMIT: ${UNIVERSE_PHPFPM_LOG_LIMIT:-8192}
+        PHPFPM_LOG_BUFFERING: ${UNIVERSE_PHPFPM_LOG_BUFFERING:-yes}
+        PHPFPM_EMERGENCY_RESTART_THRESHOLD: ${UNIVERSE_PHPFPM_EMERGENCY_RESTART_THRESHOLD:-0}
+        PHPFPM_EMERGENCY_RESTART_INTERVAL: ${UNIVERSE_PHPFPM_EMERGENCY_RESTART_INTERVAL:-0}
+        PHPFPM_PROCESS_CONTROL_TIMEOUT: ${UNIVERSE_PHPFPM_PROCESS_CONTROL_TIMEOUT:-0}
+        PHPFPM_PROCESS_MAX: ${UNIVERSE_PHPFPM_PROCESS_MAX:-0}
+        PHPFPM_RLIMIT_FILES: ${UNIVERSE_PHPFPM_RLIMIT_FILES:-0}
+        PHPFPM_RLIMIT_CORE: ${UNIVERSE_PHPFPM_RLIMIT_CORE:-0}
+        PHPFPM_EVENTS_MECHANISM: ${UNIVERSE_PHPFPM_EVENTS_MECHANISM:-epoll}
+        PHPFPM_POOL_LISTEN_BACKLOG: ${UNIVERSE_PHPFPM_POOL_LISTEN_BACKLOG:-511}
+        PHPFPM_POOL_PM: ${UNIVERSE_PHPFPM_POOL_PM:-dynamic}
+        PHPFPM_POOL_PM_MAX_CHILDREN: ${UNIVERSE_PHPFPM_POOL_PM_MAX_CHILDREN:-5}
+        PHPFPM_POOL_PM_START_SERVERS: ${UNIVERSE_PHPFPM_POOL_PM_START_SERVERS:-2}
+        PHPFPM_POOL_PM_MIN_SPARE_SERVERS: ${UNIVERSE_PHPFPM_POOL_PM_MIN_SPARE_SERVERS:-1}
+        PHPFPM_POOL_PM_MAX_SPARE_SERVERS: ${UNIVERSE_PHPFPM_POOL_PM_MAX_SPARE_SERVERS:-3}
+        PHPFPM_POOL_PM_PROCESS_IDLE_TIMEOUT: ${UNIVERSE_PHPFPM_POOL_PM_PROCESS_IDLE_TIMEOUT:-10s}
+        PHPFPM_POOL_PM_MAX_REQUESTS: ${UNIVERSE_PHPFPM_POOL_PM_MAX_REQUESTS:-0}
+        PHPFPM_POOL_PM_STATUS_PATH: ${UNIVERSE_PHPFPM_POOL_PM_STATUS_PATH:-/status}
+        PHPFPM_POOL_PING_PATH: ${UNIVERSE_PHPFPM_POOL_PING_PATH:-/ping}
+        PHPFPM_POOL_PING_RESPONSE: ${UNIVERSE_PHPFPM_POOL_PING_RESPONSE:-pong}
+        PHPFPM_POOL_ACCESS_LOG: ${UNIVERSE_PHPFPM_POOL_ACCESS_LOG:-/proc/self/fd/2}
+        PHPFPM_POOL_ACCESS_FORMAT: ${UNIVERSE_PHPFPM_POOL_ACCESS_FORMAT:-'"%R - %u %t \"%m %r%Q%q\" %s %f %{mili}}d %{kilo}M %C%%"'}
+        PHPFPM_POOL_SLOWLOG: ${UNIVERSE_PHPFPM_POOL_SLOWLOG:-/proc/self/fd/2}
+        PHPFPM_POOL_REQUEST_SLOWLOG_TIMEOUT: ${UNIVERSE_PHPFPM_POOL_REQUEST_SLOWLOG_TIMEOUT:-0}
+        PHPFPM_POOL_REQUEST_SLOWLOG_TRACE_DEPTH: ${UNIVERSE_PHPFPM_POOL_REQUEST_SLOWLOG_TRACE_DEPTH:-20}
+        PHPFPM_POOL_REQUEST_TERMINATE_TIMEOUT: ${UNIVERSE_PHPFPM_POOL_REQUEST_TERMINATE_TIMEOUT:-0}
+        PHPFPM_POOL_RLIMIT_FILES: ${UNIVERSE_PHPFPM_POOL_RLIMIT_FILES:-0}
+        PHPFPM_POOL_RLIMIT_CORE: ${UNIVERSE_PHPFPM_POOL_RLIMIT_CORE:-0}
+        PHPFPM_POOL_CATCH_WORKERS_OUTPUT: ${UNIVERSE_PHPFPM_POOL_CATCH_WORKERS_OUTPUT:-yes}
+        PHPFPM_POOL_DECORATE_WORKERS_OUTPUT: ${UNIVERSE_PHPFPM_POOL_DECORATE_WORKERS_OUTPUT:-no}
+        PHPFPM_POOL_CLEAR_ENV: ${UNIVERSE_PHPFPM_POOL_CLEAR_ENV:-no}
+        PHPFPM_POOL_SECURITY_LIMIT_EXTENSIONS: ${UNIVERSE_PHPFPM_POOL_SECURITY_LIMIT_EXTENSIONS:-.php .phar}
+    image: dataminer_php-fpm:latest
+    container_name: dataminer_php-fpm
+    hostname: dataminer_php-fpm
+    networks:
+      - default
+    volumes:
+      - socket_php-fpm:/var/run/php-fpm/:rw
+      - webroot:/var/www/html/:rw
+  dataminer_postgres:
+    build:
+      context: docker/postgres
+      args:
+        USER: ${UNIVERSE_USER}
+        DATABASE_NAME: ${UNIVERSE_POSTGRES_DB}
+        DATABASE_USER: ${UNIVERSE_POSTGRES_USER}
+        DATABASE_PASSWORD: ${UNIVERSE_POSTGRES_PASSWORD}
+    image: dataminer_postgres:latest
+    container_name: dataminer_postgres
+    hostname: dataminer_postgres
+    networks:
+      - default
+    ports:
+      - ${UNIVERSE_INTERFACE_POSTGRES}:5432
+
+networks:
+  default:
+    driver: bridge
+    name: dataminer
+
+volumes:
+  socket_php-fpm:
+    name: dataminer_socket_php-fpm
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  webroot:
+    name: dataminer_webroot
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}
+      o: bind

@@ -1,0 +1,23 @@
+parameters:
+  http_client:
+    connection_timeout: 30
+    debug_mode: false
+    proxy_uri: '%env(resolve:PROXY_URI)%'
+  melixas:
+    username: '%env(resolve:MELIXAS_USERNAME)%'
+    password: '%env(resolve:MELIXAS_PASSWORD)%'
+  wiimaxx:
+    username: '%env(resolve:WIIMAXX_USERNAME)%'
+    password: '%env(resolve:WIIMAXX_PASSWORD)%'
+    link:
+      storage_path: '%kernel.project_dir%/public/storage/wiimaxx/link'
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+  App\:
+    resource: '../src/*'
+    exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+  App\Controller\:
+    resource: '../src/Controller'
+    tags: ['controller.service_arguments']

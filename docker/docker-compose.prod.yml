@@ -1,0 +1,15 @@
+version: "3.5"
+
+services:
+  dataminer_postgres:
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/:rw
+
+volumes:
+  postgres_data:
+    name: dataminer_postgres_data
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/var/data/postgres
+      o: bind
